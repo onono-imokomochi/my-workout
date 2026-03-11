@@ -2,7 +2,15 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>マイ・ワークアウト Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>運動習慣大作戦</title>
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="運動大作戦">
+    
+    <link rel="apple-touch-icon" href="icon.png?v=3">
+
     <style>
         body {
             background-color: #f0f8ff; 
@@ -10,6 +18,7 @@
             font-family: 'Helvetica Neue', Arial, sans-serif;
             padding: 20px;
             color: #333;
+            padding-top: env(safe-area-inset-top);
         }
         #messageDisplay {
             color: #555;
@@ -24,10 +33,13 @@
         }
         .button-group {
             margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         button {
-            padding: 12px 24px;
-            margin: 8px;
+            padding: 15px 20px;
+            margin: 5px;
             border-radius: 25px;     
             border: none;
             background-color: #ff7f50; 
@@ -35,9 +47,9 @@
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            transition: transform 0.1s;
+            -webkit-tap-highlight-color: transparent;
         }
-        button:active { transform: scale(0.95); }
+        button:active { transform: scale(0.95); opacity: 0.8; }
         
         .clear-btn {
             background-color: #bbb;
@@ -60,28 +72,22 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            animation: fadeIn 0.4s ease-out;
+            animation: fadeIn 0.3s ease-in;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         .log-time { color: #888; font-size: 0.8em; }
         .log-name { font-weight: bold; font-size: 1.1em; }
     </style>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="ワークアウト">
 </head>
 
 <body>
-    <h1>私のワークアウトアプリ</h1>
+    <h1>運動習慣大作戦</h1>
     
     <div id="messageDisplay">（運動を記録すると名言が出ます）</div>
 
     <div style="margin-bottom: 20px;">
         <label style="font-size: 0.9em; color: #666;">今日の調子は？</label><br>
-        <select id="scoreSelect" style="padding: 8px; border-radius: 10px; border: 1px solid #ccc; margin-top: 5px;">
+        <select id="scoreSelect" style="padding: 10px; border-radius: 10px; border: 1px solid #ccc; margin-top: 5px; font-size: 16px;">
             <option value="⭐⭐⭐⭐⭐">5: 最高！</option>
             <option value="⭐⭐⭐⭐">4: 良い</option>
             <option value="⭐⭐⭐" selected>3: 普通</option>
@@ -111,12 +117,13 @@
             "「読書は精神の、運動は肉体のためのものである。」"
         ];
 
+        // 絵文字をあなたの指定に変更しました！
         const icons = {
             "サッカー": "⚽️",
             "ランニング": "🏃",
-            "体幹": "🧘",
+            "体幹": "🏋️",
             "整体": "💆",
-            "ストレッチ": "🙆"
+            "ストレッチ": "🤸"
         };
 
         window.onload = function() {
