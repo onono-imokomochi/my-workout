@@ -8,132 +8,179 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="運動大作戦">
-    <link rel="apple-touch-icon" href="icon.png?v=4">
+    <link rel="apple-touch-icon" href="icon.png?v=5">
 
     <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
     <style>
         :root {
-            --primary: #ff7f50;
-            --bg: #f0f8ff;
-            --white: #ffffff;
+            --primary: #87CEEB; /* アイコンと同じ薄い水色 */
+            --accent: #ff7f50;
+            --bg: #f8fbff;
+            --card: #ffffff;
         }
         body {
             background-color: var(--bg);
             font-family: 'Helvetica Neue', Arial, sans-serif;
             margin: 0;
-            padding: 20px 20px 80px 20px; /* 下部に余白 */
+            padding: 20px 15px 100px 15px;
             color: #333;
+            text-align: center; /* 全体の中央揃え */
             padding-top: env(safe-area-inset-top);
         }
-        h1 { font-size: 1.5em; margin-bottom: 10px; }
-        
-        /* 今月の合計表示 */
-        #monthlyStats {
-            background: var(--white);
-            padding: 10px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            font-weight: bold;
-            color: var(--primary);
-        }
 
-        /* セクション切り替え */
-        .page { display: none; }
-        .page.active { display: block; }
+        /* ヘッダー周り */
+        h1 { font-size: 1.6em; margin: 10px 0; text-align: center; width: 100%; }
+        
+        /* ステータスエリア */
+        .status-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            max-width: 500px;
+            margin: 0 auto 15px;
+        }
+        .status-card {
+            background: var(--card);
+            padding: 12px;
+            border-radius: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            font-size: 0.85em;
+        }
+        .level-badge { color: var(--accent); font-weight: bold; font-size: 1.1em; }
 
         /* 入力エリア */
         .input-card {
-            background: var(--white);
+            background: var(--card);
             padding: 20px;
             border-radius: 20px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            max-width: 400px; /* 横幅固定で中央へ */
+            margin: 0 auto 25px;
             text-align: left;
+            box-sizing: border-box;
         }
         .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 0.85em; color: #666; margin-bottom: 5px; }
-        input, select {
+        label { display: block; font-size: 0.8em; color: #777; margin-bottom: 5px; font-weight: bold; }
+        input, select, textarea {
             width: 100%;
             padding: 12px;
             border-radius: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid #eee;
             box-sizing: border-box;
             font-size: 16px;
+            background: #fafafa;
         }
 
-        .button-group { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 15px; }
+        /* 種目ボタンの2段構成 */
+        .type-grid {
+            display: grid;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        .type-row-top { grid-template-columns: 1fr 1fr; display: grid; gap: 8px; }
+        .type-row-bottom { grid-template-columns: 1fr 1fr 1fr; display: grid; gap: 8px; }
+        
         .type-btn {
-            background: #eee; color: #333; border: none; padding: 10px 15px;
-            border-radius: 20px; font-weight: bold; cursor: pointer;
+            background: #f0f0f0; border: none; padding: 10px;
+            border-radius: 12px; font-size: 0.9em; cursor: pointer; transition: 0.2s;
         }
         .type-btn.selected { background: var(--primary); color: white; }
 
         .submit-btn {
             width: 100%; background: var(--primary); color: white;
-            border: none; padding: 15px; border-radius: 25px;
-            font-size: 1.1em; font-weight: bold; margin-top: 10px;
+            border: none; padding: 16px; border-radius: 30px;
+            font-size: 1.1em; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 10px rgba(135, 206, 235, 0.4);
         }
 
-        /* ログ表示 */
-        ul { list-style: none; padding: 0; }
-        li {
-            background: var(--white); margin-bottom: 10px; padding: 15px;
-            border-radius: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            display: flex; justify-content: space-between; align-items: center;
+        /* ログリスト */
+        .log-item {
+            background: var(--card); margin-bottom: 10px; padding: 15px;
+            border-radius: 15px; display: flex; justify-content: space-between;
+            align-items: center; text-align: left; max-width: 500px; margin-left: auto; margin-right: auto;
         }
-        .details { font-size: 0.85em; color: #666; margin-top: 4px; }
 
-        /* 下部ナビゲーション */
+        /* カレンダー・カスタマイズ */
+        #calendar { 
+            background: white; padding: 10px; border-radius: 15px; 
+            max-width: 500px; margin: 0 auto;
+        }
+        .fc-daygrid-day-number { font-size: 0.7em !important; color: #ccc; } /* 数字を目立たなく */
+        .fc-daygrid-day-top { flex-direction: row !important; }
+        .fc-day-other .fc-daygrid-day-top { display: none; } /* 他月の日を消す */
+        .fc-scrollgrid { border: none !important; }
+        
+        /* ナビゲーション */
         .nav-bar {
             position: fixed; bottom: 0; left: 0; right: 0;
-            background: var(--white); display: flex; height: 60px;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-            padding-bottom: env(safe-area-inset-bottom);
+            background: rgba(255,255,255,0.9); backdrop-filter: blur(10px);
+            display: flex; height: 70px; padding-bottom: env(safe-area-inset-bottom);
+            border-top: 1px solid #eee; z-index: 1000;
         }
-        .nav-item {
-            flex: 1; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            color: #888; font-size: 0.7em; cursor: pointer;
-        }
+        .nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #bbb; font-size: 0.7em; }
         .nav-item.active { color: var(--primary); }
-        .nav-icon { font-size: 1.5em; }
+        .nav-icon { font-size: 1.6em; margin-bottom: 3px; }
 
-        #calendar { background: white; padding: 10px; border-radius: 15px; }
+        .page { display: none; animation: fadeIn 0.3s; }
+        .page.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
     <div id="recordPage" class="page active">
         <h1>運動習慣大作戦</h1>
-        <div id="monthlyStats">今月の合計：読み込み中...</div>
+        
+        <div class="status-container">
+            <div class="status-card">
+                <div>現在のLv</div>
+                <div class="level-badge" id="levelDisp">Lv.1 初心者</div>
+            </div>
+            <div class="status-card">
+                <div>継続日数</div>
+                <div class="level-badge" id="streakDisp">0日</div>
+            </div>
+        </div>
+
+        <div id="statsSummary" class="status-card" style="max-width:500px; margin: 0 auto 15px; font-size: 0.8em; line-height: 1.6;">
+            </div>
 
         <div class="input-card">
             <div class="form-group">
-                <label>いつの記録？</label>
+                <label>日付・時刻</label>
                 <input type="datetime-local" id="dateInput">
             </div>
 
             <label>種目を選択</label>
-            <div class="button-group" id="typeGroup">
-                <button class="type-btn selected" onclick="selectType('サッカー')">サッカー</button>
-                <button class="type-btn" onclick="selectType('ランニング')">ランニング</button>
-                <button class="type-btn" onclick="selectType('体幹')">体幹</button>
-                <button class="type-btn" onclick="selectType('整体')">整体</button>
-                <button class="type-btn" onclick="selectType('ストレッチ')">ストレッチ</button>
+            <div class="type-grid">
+                <div class="type-row-top">
+                    <button class="type-btn selected" id="btn-サッカー" onclick="selectType('サッカー')">⚽️ サッカー</button>
+                    <button class="type-btn" id="btn-ランニング" onclick="selectType('ランニング')">🏃 ランニング</button>
+                </div>
+                <div class="type-row-bottom">
+                    <button class="type-btn" id="btn-体幹" onclick="selectType('体幹')">🏋️ 体幹</button>
+                    <button class="type-btn" id="btn-整体" onclick="selectType('整体')">💆 整体</button>
+                    <button class="type-btn" id="btn-ストレッチ" onclick="selectType('ストレッチ')">🤸 伸脚</button>
+                </div>
             </div>
 
             <div id="extraInputs"></div>
 
             <div class="form-group">
-                <label>調子</label>
+                <label>感情ログ・メモ</label>
+                <textarea id="memoInput" rows="2" placeholder="今の気分や感想を自由にメモ！"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>コンディション</label>
                 <select id="scoreSelect">
                     <option value="⭐⭐⭐⭐⭐">5: 最高！</option>
                     <option value="⭐⭐⭐⭐">4: 良い</option>
                     <option value="⭐⭐⭐" selected>3: 普通</option>
                     <option value="⭐⭐">2: まあまあ</option>
-                    <option value="⭐">1: しんどかった</option>
+                    <option value="⭐">1: 限界...</option>
                 </select>
             </div>
 
@@ -148,155 +195,190 @@
         <div id="calendar"></div>
     </div>
 
+    <div id="reportPage" class="page">
+        <h1>月報レポート</h1>
+        <div id="reportContent" class="input-card" style="text-align: left;"></div>
+    </div>
+
     <div class="nav-bar">
-        <div class="nav-item active" id="navRec" onclick="showPage('record')">
-            <span class="nav-icon">📝</span>記録
-        </div>
-        <div class="nav-item" id="navCal" onclick="showPage('calendar')">
-            <span class="nav-icon">📅</span>カレンダー
-        </div>
+        <div class="nav-item active" id="navRec" onclick="showPage('record')"><span class="nav-icon">📝</span>記録</div>
+        <div class="nav-item" id="navCal" onclick="showPage('calendar')"><span class="nav-icon">📅</span>カレンダー</div>
+        <div class="nav-item" id="navRep" onclick="showPage('report')"><span class="nav-icon">📊</span>月報</div>
     </div>
 
     <script>
         let selectedType = 'サッカー';
         const icons = { "サッカー": "⚽️", "ランニング": "🏃", "体幹": "🏋️", "整体": "💆", "ストレッチ": "🤸" };
+        
+        // 名言ストック（後で書き換えてね！）
+        const wisdoms = [
+            "努力は裏切らない。だが、休息も戦略だ。",
+            "昨日の自分を、ほんの少し超えていこう。",
+            "100回叩くと壊れる壁を、99回で諦めていないか？",
+            "継続とは、同じことを繰り返すのではなく、成長し続けることだ。"
+        ];
 
         window.onload = () => {
-            // 現在時刻をデフォルトセット
             const now = new Date();
             now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
             document.getElementById('dateInput').value = now.toISOString().slice(0, 16);
-            
             selectType('サッカー');
-            renderLogs();
+            renderAll();
         };
 
         function selectType(type) {
             selectedType = type;
-            const btns = document.querySelectorAll('.type-btn');
-            btns.forEach(b => b.classList.remove('selected'));
-            event.target.classList.add('selected');
-
+            document.querySelectorAll('.type-btn').forEach(b => b.classList.remove('selected'));
+            document.getElementById(`btn-${type}`).classList.add('selected');
             const extra = document.getElementById('extraInputs');
             extra.innerHTML = '';
 
             if (type === 'サッカー') {
                 extra.innerHTML = `
-                    <div class="form-group"><label>勝敗</label><select id="winLoss"><option>勝ち</option><option>引き分け</option><option>負け</option></select></div>
-                    <div class="form-group"><label>チームスコア (自分 vs 相手)</label><input type="text" id="score" placeholder="2-1"></div>
-                    <div class="form-group"><label>ゴール数 (0-10)</label><input type="number" id="goals" min="0" max="10" value="0"></div>
-                    <div class="form-group"><label>アシスト数 (0-10)</label><input type="number" id="assists" min="0" max="10" value="0"></div>
-                `;
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div class="form-group"><label>結果</label><select id="winLoss"><option>勝ち</option><option>分け</option><option>負け</option></select></div>
+                        <div class="form-group"><label>スコア</label><input type="text" id="score" placeholder="2-1"></div>
+                        <div class="form-group"><label>ゴール</label><input type="number" id="goals" min="0" max="10" value="0"></div>
+                        <div class="form-group"><label>アシスト</label><input type="number" id="assists" min="0" max="10" value="0"></div>
+                    </div>`;
             } else if (type === 'ランニング') {
                 extra.innerHTML = `
-                    <div class="form-group"><label>距離 (km)</label><input type="number" id="distance" step="0.1" placeholder="5.0"></div>
-                    <div class="form-group"><label>時間 (分)</label><input type="number" id="duration" placeholder="30"></div>
-                `;
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <div class="form-group"><label>距離 (km)</label><input type="number" id="dist" step="0.1" placeholder="5.0"></div>
+                        <div class="form-group"><label>時間 (分)</label><input type="number" id="dur" placeholder="30"></div>
+                    </div>`;
             }
         }
 
         function saveRecord() {
             const dateVal = document.getElementById('dateInput').value;
             const score = document.getElementById('scoreSelect').value;
-            let detailStr = "";
+            const memo = document.getElementById('memoInput').value;
+            let data = { date: dateVal, name: selectedType, score: score, memo: memo };
 
             if (selectedType === 'サッカー') {
-                const wl = document.getElementById('winLoss').value;
-                const sc = document.getElementById('score').value;
-                const g = document.getElementById('goals').value;
-                const a = document.getElementById('assists').value;
-                detailStr = `${wl} (${sc}) | G:${g} A:${a}`;
+                data.winLoss = document.getElementById('winLoss').value;
+                data.teamScore = document.getElementById('score').value;
+                data.goals = parseInt(document.getElementById('goals').value) || 0;
+                data.assists = parseInt(document.getElementById('assists').value) || 0;
             } else if (selectedType === 'ランニング') {
-                const dist = parseFloat(document.getElementById('distance').value);
-                const dur = parseFloat(document.getElementById('duration').value);
-                if (dist && dur) {
-                    const pace = (dur / dist).toFixed(2);
-                    detailStr = `${dist}km | ${dur}分 (ペース ${pace}/km)`;
-                }
+                data.distance = parseFloat(document.getElementById('dist').value) || 0;
+                data.duration = parseFloat(document.getElementById('dur').value) || 0;
             }
 
             const logs = JSON.parse(localStorage.getItem("workoutLogs")) || [];
-            logs.push({
-                date: dateVal,
-                name: selectedType,
-                score: score,
-                details: detailStr
-            });
+            logs.push(data);
             localStorage.setItem("workoutLogs", JSON.stringify(logs));
+            
+            const quote = wisdoms[Math.floor(Math.random() * wisdoms.length)];
+            alert(`ナイスワーク！今日の名言：\n\n「${quote}」`);
+            
+            document.getElementById('memoInput').value = "";
+            renderAll();
+        }
+
+        function renderAll() {
             renderLogs();
-            alert("記録しました！");
+            updateStats();
+        }
+
+        function updateStats() {
+            const logs = JSON.parse(localStorage.getItem("workoutLogs")) || [];
+            const now = new Date();
+            const thisMonth = now.getMonth();
+            
+            let totalG = 0, totalA = 0, totalD = 0;
+            let monthG = 0, monthA = 0, monthD = 0;
+
+            logs.forEach(l => {
+                const d = new Date(l.date);
+                if (l.goals) totalG += l.goals;
+                if (l.assists) totalA += l.assists;
+                if (l.distance) totalD += l.distance;
+                if (d.getMonth() === thisMonth) {
+                    if (l.goals) monthG += l.goals;
+                    if (l.assists) monthA += l.assists;
+                    if (l.distance) monthD += l.distance;
+                }
+            });
+
+            document.getElementById('statsSummary').innerHTML = `
+                <strong>【累計】</strong> ⚽️ ${totalG}G / ${totalA}A | 🏃 ${totalD.toFixed(1)}km<br>
+                <strong>【今月】</strong> ⚽️ ${monthG}G / ${monthA}A | 🏃 ${monthD.toFixed(1)}km
+            `;
+
+            // レベル計算 (回数ベース)
+            const count = logs.length;
+            const lv = Math.floor(count / 5) + 1;
+            const titles = ["初心者", "見習い", "戦士", "達人", "超人", "伝説"];
+            document.getElementById('levelDisp').textContent = `Lv.${lv} ${titles[lv-1] || "神"}`;
         }
 
         function renderLogs() {
             const list = document.getElementById('logList');
             list.innerHTML = "";
-            const logs = JSON.parse(localStorage.getItem("workoutLogs")) || [];
-            
-            // 月間合計の計算
-            const now = new Date();
-            const currentMonth = now.getMonth();
-            const currentYear = now.getFullYear();
-            const monthLogs = logs.filter(l => {
-                const d = new Date(l.date);
-                return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-            });
-            document.getElementById('monthlyStats').textContent = `今月の合計：${monthLogs.length}回`;
-
-            // リスト表示
-            monthLogs.reverse().forEach((l, idx) => {
+            const logs = (JSON.parse(localStorage.getItem("workoutLogs")) || []).reverse();
+            logs.slice(0, 10).forEach((l, idx) => {
                 const li = document.createElement('li');
-                li.innerHTML = `
-                    <div style="text-align:left">
-                        <strong>${icons[l.name]} ${l.name}</strong> <small>${l.score}</small>
-                        <div class="details">${l.details}</div>
-                        <div style="font-size:0.7em; color:#999">${l.date.replace('T', ' ')}</div>
-                    </div>
-                    <button style="background:none; color:#ccc; box-shadow:none;" onclick="deleteLog(${logs.length - 1 - idx})">✕</button>
-                `;
+                li.className = "log-item";
+                li.innerHTML = `<div><strong>${icons[l.name]} ${l.name}</strong> <small>${l.date.split('T')[0]}</small></div>
+                                <button style="background:none; border:none; color:#ddd;" onclick="deleteLog(${logs.length-1-idx})">✕</button>`;
                 list.appendChild(li);
             });
         }
 
-        function deleteLog(index) {
-            if(!confirm("削除しますか？")) return;
-            const logs = JSON.parse(localStorage.getItem("workoutLogs")) || [];
-            logs.splice(index, 1);
-            localStorage.setItem("workoutLogs", JSON.stringify(logs));
-            renderLogs();
-        }
-
-        function showPage(pageId) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            
-            if (pageId === 'record') {
-                document.getElementById('recordPage').classList.add('active');
-                document.getElementById('navRec').classList.add('active');
-            } else {
-                document.getElementById('calendarPage').classList.add('active');
-                document.getElementById('navCal').classList.add('active');
-                initCalendar();
-            }
+        function showPage(p) {
+            document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById(p + 'Page').classList.add('active');
+            if(p === 'calendar') initCalendar();
+            if(p === 'report') renderReport();
         }
 
         function initCalendar() {
             const logs = JSON.parse(localStorage.getItem("workoutLogs")) || [];
-            const events = logs.map(l => ({
-                title: icons[l.name] + l.name,
-                start: l.date,
-                allDay: false
-            }));
-
-            const calendarEl = document.getElementById('calendar');
-            const calendar = new FullCalendar.Calendar(calendarEl, {
+            const events = logs.map(l => ({ title: icons[l.name], start: l.date, extendedProps: l }));
+            const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
                 initialView: 'dayGridMonth',
                 locale: 'ja',
+                fixedWeekCount: false, // 5行にする工夫
                 events: events,
                 headerToolbar: { left: 'prev', center: 'title', right: 'next' },
-                height: 'auto'
+                eventClick: (info) => {
+                    const p = info.event.extendedProps;
+                    let txt = `${p.name}\n調子: ${p.score}\nメモ: ${p.memo || 'なし'}`;
+                    if(p.name === 'サッカー') txt += `\n結果: ${p.winLoss} (${p.teamScore})\nゴール: ${p.goals} アシスト: ${p.assists}`;
+                    if(p.name === 'ランニング') txt += `\n距離: ${p.distance}km\n時間: ${p.duration}分`;
+                    alert(txt);
+                }
             });
             calendar.render();
         }
+
+        function renderReport() {
+            const logs = JSON.parse(localStorage.getItem("workoutLogs")) || [];
+            const now = new Date();
+            const monthLogs = logs.filter(l => new Date(l.date).getMonth() === now.getMonth());
+            const content = document.getElementById('reportContent');
+            content.innerHTML = `<h3>今月の総括</h3>
+                <p>・合計運動回数: ${monthLogs.length}回</p>
+                <p>・メイン種目: ${getFavorite(monthLogs)}</p>
+                <p>・AIアドバイス: ${monthLogs.length > 10 ? "素晴らしいペースです！この調子で怪我に気をつけて。" : "もう少し回数を増やせると、さらに成長を感じられそうです。"}</p>`;
+        }
+
+        function getFavorite(logs) {
+            if (logs.length === 0) return "まだデータがありません";
+            const counts = {};
+            logs.forEach(l => counts[l.name] = (counts[l.name] || 0) + 1);
+            return Object.keys(counts).reduce((a, b) => counts[a] > counts[b] ? a : b);
+        }
+
+        function deleteLog(i) { if(confirm("消す？")) { 
+            const logs = JSON.parse(localStorage.getItem("workoutLogs"));
+            logs.splice(i, 1);
+            localStorage.setItem("workoutLogs", JSON.stringify(logs));
+            renderAll();
+        }}
     </script>
 </body>
 </html>
