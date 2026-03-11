@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>マイ・ワークアウト Pro</title>
+    <style>
+        body {
+            background-color: #f0f8ff; 
+            text-align: center;       
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            padding: 20px;
+            color: #333;
+        }
+        #messageDisplay {
+            color: #555;
+            font-style: italic;
+            min-height: 4em;
+            margin: 20px auto;
+            max-width: 500px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px dashed #ccc;
+        }
+        .button-group {
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            margin: 8px;
+            border-radius: 25px;     
+            border: none;
+            background-color: #ff7f50; 
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+        }
+        button:active { transform: scale(0.95); }
+        
+        .clear-btn {
+            background-color: #bbb;
+            font-size: 0.8em;
+            margin-top: 40px;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        li {
+            background: #fff;
+            margin: 10px 0;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: fadeIn 0.4s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .log-time { color: #888; font-size: 0.8em; }
+        .log-name { font-weight: bold; font-size: 1.1em; }
+    </style>
+</head>
+
+<body>
+    <h1>私のワークアウトアプリ</h1>
+    
+    <div id="messageDisplay">（運動を記録すると名言が出ます）</div>
+
+    <div style="margin-bottom: 20px;">
+        <label style="font-size: 0.9em; color: #666;">今日の調子は？</label><br>
+        <select id="scoreSelect" style="padding: 8px; border-radius: 10px; border: 1px solid #ccc; margin-top: 5px;">
+            <option value="⭐⭐⭐⭐⭐">5: 最高！</option>
+            <option value="⭐⭐⭐⭐">4: 良い</option>
+            <option value="⭐⭐⭐" selected>3: 普通</option>
+            <option value="⭐⭐">2: まあまあ</option>
+            <option value="⭐">1: しんどかった</option>
+        </select>
+    </div>
+
+    <div class="button-group">
+        <button onclick="recordWorkout('サッカー')">サッカー</button>
+        <button onclick="recordWorkout('ランニング')">ランニング</button>
+        <button onclick="recordWorkout('体幹')">体幹</button>
+        <button onclick="recordWorkout('整体')">整体</button>
+        <button onclick="recordWorkout('ストレッチ')">ストレッチ</button>
+    </div>
+
+    <ul id="logList"></ul>
+
+    <button onclick="clearLogs()" class="clear-btn">記録をすべて消去</button>
+
+    <script>
+        const messages = [
+            "「継続は力なり。」",
+            "「今日逃げたら、明日はもっと大きな勇気が必要になる。」",
+            "「完璧を目指すより、まずは終わらせろ。」",
+            "「運動は運を動かすことである！」",
+            "「読書は精神の、運動は肉体のためのものである。」"
+        ];
+
+        const icons = {
+            "サッカー": "⚽️",
+            "ランニング": "🏃",
+            "体幹": "🧘",
+            "整体": "💆",
+            "ストレッチ": "🙆"
+        };
+
+        window.onload = function() {
+            const savedData = JSON.parse(localStorage.getItem("workoutLogs")) || [];
+            savedData.forEach(item => {
+                addLogToScreen(item.time, item.name, item.score || "");
+            });
+        };
+
+        function recordWorkout(name) {
+            const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+            document.getElementById("messageDisplay").textContent = randomMessage;
+
+            const score = document.getElementById("scoreSelect").value;
+            const now = new Date();
+            const timeString = (now.getMonth() + 1) + "/" + now.getDate() + " " + now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+            
+            addLogToScreen(timeString, name, score);
+            saveData(timeString, name, score);
+        }
+
+        function addLogToScreen(time, name, score) {
+            const list = document.getElementById("logList");
+            const newItem = document.createElement("li");
+            const icon = icons[name] || "✨";
+            
+            newItem.innerHTML = `
+                <div style="display: flex; align-items: center;">
+                    <div style="font-size: 2em; margin-right: 15px;">${icon}</div>
+                    <div style="text-align: left;">
+                        <span class="log-name">${name}</span>
+                        <div style="font-size: 0.8em; color: #ffa500;">${score}</div>
+                    </div>
+                </div>
+                <span class="log-time">${time}</span>
+            `;
+            list.prepend(newItem);
+        }
+
+        function saveData(time, name, score) {
+            const savedData = JSON.parse(localStorage.getItem("workoutLogs")) || [];
+            savedData.push({ time: time, name: name, score: score });
+            localStorage.setItem("workoutLogs", JSON.stringify(savedData));
+        }
+
+        function clearLogs() {
+            if (confirm("本当にすべての記録を消去しますか？")) {
+                localStorage.removeItem("workoutLogs");
+                location.reload(); 
+            }
+        }
+    </script>
+</body>
+</html>
